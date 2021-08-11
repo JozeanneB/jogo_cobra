@@ -2,7 +2,8 @@ let canvas = document.getElementById("snake");
 let context = canvas.getContext("2d");
 let box = 32;
 let snake = [{ x: 8 * box, y: 8 * box }];
-let contador;
+let counter;
+let direction = "right";
 
 function criarBackGround() {
   context.fillStyle = "lightgreen";
@@ -10,11 +11,29 @@ function criarBackGround() {
 }
 
 function criarCobrinha() {
-  for (contador = 0; contador < snake.length; contador++) {
+  for (counter = 0; counter < snake.length; counter++) {
     context.fillStyle = "green";
-    context.fillRect(snake[contador].x, snake[contador].y, box, box);
+    context.fillRect(snake[counter].x, snake[counter].y, box, box);
   }
 }
 
-criarBackGround();
-criarCobrinha();
+function iniciarJogo() {
+  criarBackGround();
+  criarCobrinha();
+
+  let positionX = snake[0].x;
+  let positionY = snake[0].y;
+
+  if (direction === "right") positionX += box;
+  if (direction === "left") positionX -= box;
+  if (direction === "up") positionY -= box;
+  if (direction === "down") positionY += box;
+
+  snake.pop();
+
+  let newHead = { x: positionX, y: positionY };
+
+  snake.unshift(newHead);
+}
+
+let jogo = setInterval(iniciarJogo, 100);
