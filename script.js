@@ -1,76 +1,108 @@
+const BOX = 32;
+
 let canvas = document.getElementById("snake");
 let context = canvas.getContext("2d");
-let box = 32;
-let snake = [];
-snake[0] = { x: 8 * box, y: 8 * box };
-let direction = "right";
-let food = {
-  x: Math.floor(Math.random() * 15 + 1) * box,
-  y: Math.floor(Math.random() * 15 + 1) * box,
-};
 
-function criarBackGround() {
-  context.fillStyle = "lightgreen";
-  context.fillRect(0, 0, 16 * box, 16 * box);
+let cobra = [];
+cobra[0] = { x: 8 * BOX, y: 8 * BOX };
+let direcao = "right";
+
+function obtemNovaComida() {
+  return { x: obtemPosicaoAleatoria(), y: obtemPosicaoAleatoria() };
 }
 
-function criarCobrinha() {
-  for (counter = 0; counter < snake.length; counter++) {
+function obtemPosicaoAleatoria() {
+  return Math.floor(Math.random() * 15 + 1) * BOX;
+}
+
+let food = obtemNovaComida();
+
+function criaBackGround() {
+  context.fillStyle = "lightgreen";
+  context.fillRect(0, 0, 16 * BOX, 16 * BOX);
+}
+
+function criaCobra() {
+  for (counter = 0; counter < cobra.length; counter++) {
     context.fillStyle = "green";
-    context.fillRect(snake[counter].x, snake[counter].y, box, box);
+    context.fillRect(cobra[counter].x, cobra[counter].y, BOX, BOX);
   }
 }
 
-function drawFood() {
+function criaComida() {
   context.fillStyle = "red";
-  context.fillRect(food.x, food.y, box, box);
+  context.fillRect(food.x, food.y, BOX, BOX);
 }
 
-document.addEventListener("keydown", update);
+document.addEventListener("keydown", atualizaDirecaoCobra);
 
-function update(event) {
-  if (event.keyCode == 37 && direction != "right") direction = "left";
-  if (event.keyCode == 38 && direction != "down") direction = "up";
-  if (event.keyCode == 39 && direction != "left") direction = "right";
-  if (event.keyCode == 40 && direction != "up") direction = "down";
+function atualizaDirecaoCobra(event) {
+  if (event.keyCode == 37 && direcao != "right") direcao = "left";
+  if (event.keyCode == 38 && direcao != "down") direcao = "up";
+  if (event.keyCode == 39 && direcao != "left") direcao = "right";
+  if (event.keyCode == 40 && direcao != "up") direcao = "down";
 }
 
-function iniciarJogo() {
-  if (snake[0].x > 15 * box && direction == "right") snake[0].x = 0;
-  if (snake[0].x < 0 && direction == "left") snake[0].x = 16 * box;
+function cobraEnconstaNaBorda() {
+  return cobra[0].x > 15 || cobra[0].x < 0 || cobra[0].y > 15 || cobra[0].y < 0;
+}
 
-  if (snake[0].y > 15 * box && direction == "down") snake[0].y = 0;
-  if (snake[0].y < 0 && direction == "up") snake[0].y = 16 * box;
+function afastaCobraDaBorda() {
+  if (cobra[0].x > 15 * BOX && direcao == "right") cobra[0].x = 0;
+  if (cobra[0].x < 0 && direcao == "left") cobra[0].x = 16 * BOX;
 
-  for (counter = 1; counter < snake.length; counter++) {
-    if (snake[0].x == snake[counter].x && snake[0].y == snake[counter].y) {
+  if (cobra[0].y > 15 * BOX && direcao == "down") cobra[0].y = 0;
+  if (cobra[0].y < 0 && direcao == "up") cobra[0].y = 16 * BOX;
+}
+
+function finalizaJogoSeCabecaDaCobraEncostaNoCorpo() {
+  for (counter = 1; counter < cobra.length; counter++) {
+    if (cobra[0].x == cobra[counter].x && cobra[0].y == cobra[counter].y) {
       clearInterval(jogo);
-      alert("Game Over :(");
+      alert("Fim de Jogo. Atualize a página para jogar novamente.");
     }
   }
-
-  criarBackGround();
-  criarCobrinha();
-  drawFood();
-
-  let positionX = snake[0].x;
-  let positionY = snake[0].y;
-
-  if (direction == "right") positionX += box;
-  if (direction == "left") positionX -= box;
-  if (direction == "up") positionY -= box;
-  if (direction == "down") positionY += box;
-
-  if (positionX != food.x || positionY != food.y) {
-    snake.pop();
-  } else {
-    food.x = Math.floor(Math.random() * 15 + 1) * box;
-    food.y = Math.floor(Math.random() * 15 + 1) * box;
-  }
-
-  let newHead = { x: positionX, y: positionY };
-
-  snake.unshift(newHead);
 }
 
-let jogo = setInterval(iniciarJogo, 100);
+function definePosicaoCobra() {
+  let posicaoX = cobra[0].x;
+  let posicaoY = cobra[0].y;
+
+  if (direcao == "right") posicaoX += BOX;
+  if (direcao == "left") posicaoX -= BOX;
+  if (direcao == "up") posicaoY -= BOX;
+  if (direcao == "down") posicaoY += BOX;
+
+  return { x: posicaoX, y: posicaoY };
+}
+
+function moveComida() {
+  food = obtemNovaComida();
+}
+
+function cobraComeuComida(newPosition) {
+  return newPosition.x == food.x && newPosition.y == food.y;
+}
+
+function moveCobraEComida() {
+  let novaPosicao = definePosicaoCobra();
+
+  if (cobraComeuComida(novaPosicao)) moveComida();
+  else cobra.pop();
+
+  cobra.unshift(novaPosicao);
+}
+
+function iniciaJogo() {
+  if (cobraEnconstaNaBorda()) afastaCobraDaBorda();
+
+  finalizaJogoSeCabecaDaCobraEncostaNoCorpo();
+
+  criaBackGround();
+  criaCobra();
+  criaComida();
+
+  moveCobraEComida();
+}
+
+let jogo = setInterval(iniciaJogo, 100);
